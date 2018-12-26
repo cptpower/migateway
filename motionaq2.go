@@ -5,51 +5,53 @@ import (
 )
 
 const (
-	MODEL_MOTION = "motion"
+	MODEL_MOTIONAQ2 = "sensor_motion.aq2"
 
-	FIELD_NO_MOTION = "no_motion"
+	MOTIONAQ2_FIELD_NO_MOTION = "no_motion"
+	MOTIONAQ2_FIELD_LUX       = "lux"
 )
 
-type Motion struct {
+type MotionAq2 struct {
 	*Device
-	State MotionState
+	State MotionStateAq2
 }
 
-type MotionState struct {
+type MotionStateAq2 struct {
 	Battery    float32
 	HasMotion  bool
 	LastMotion time.Time
+	Lux        int
 }
 
-type MotionStateChange struct {
+type MotionStateChangeAq2 struct {
 	ID   string
-	From MotionState
-	To   MotionState
+	From MotionStateAq2
+	To   MotionStateAq2
 }
 
-func (m MotionStateChange) IsChanged() bool {
+func (m MotionStateChangeAq2) IsChanged() bool {
 	return m.From.HasMotion != m.To.HasMotion || m.From.LastMotion != m.To.LastMotion
 }
 
-func (m *Motion) GetData() interface{} {
+func (m *MotionAq2) GetData() interface{} {
 	return m.Data
 }
 
-func NewMotion(dev *Device) *Motion {
-	return &Motion{
+func NewMotionAq2(dev *Device) *MotionAq2 {
+	return &MotionAq2{
 		Device: dev,
-		State: MotionState{
+		State: MotionStateAq2{
 			Battery:   dev.GetBatteryLevel(0),
+			Lux:       dev.GetDataAsInt(MOTIONAQ2_FIELD_LUX),
 			HasMotion: dev.GetDataAsBool(FIELD_STATUS),
 		},
 	}
 }
 
-func (m *Motion) Set(dev *Device) {
+func (m *MotionAq2) Set(dev *Device) {
 	dev.SetLastUpdate()
-
 	timestamp := time.Now()
-	change := &MotionStateChange{ID: m.Sid, From: m.State, To: m.State}
+	change := &MotionStateChangeAq2{ID: m.Sid, From: m.State, To: m.State}
 	if dev.hasField(FIELD_STATUS) {
 		m.State.HasMotion = dev.GetDataAsBool(FIELD_STATUS)
 		if m.State.HasMotion {
@@ -60,6 +62,8 @@ func (m *Motion) Set(dev *Device) {
 		nomotionInSeconds := int64(dev.GetDataAsInt(FIELD_NO_MOTION)) * -1
 		timestamp.Add(time.Duration(nomotionInSeconds) * time.Second)
 		m.State.LastMotion = timestamp
+	} else if dev.hasField(MOTIONAQ2_FIELD_LUX) {
+		m.State.Lux = dev.GetDataAsInt(MOTIONAQ2_FIELD_LUX)
 	}
 
 	m.State.Battery = dev.GetBatteryLevel(m.State.Battery)

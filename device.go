@@ -24,8 +24,13 @@ type Device struct {
 	Data               string        `json:"data,omitempty"`
 	Token              string        `json:"token,omitempty"`
 	Aqara              *AqaraManager `json:"-"`
+	LastUpdate         time.Time     `json:"-"`
 	heartBeatTimestamp int64
 	dataMap            map[string]interface{}
+}
+
+func (d *Device) SetLastUpdate() {
+	d.LastUpdate = time.Now()
 }
 
 func (d *Device) RefreshStatus() error {

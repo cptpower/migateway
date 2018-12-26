@@ -37,6 +37,8 @@ func NewPlug(dev *Device) *Plug {
 }
 
 func (p *Plug) Set(dev *Device) {
+	dev.SetLastUpdate()
+
 	change := &PlugStateChange{ID: p.Sid, From: p.State, To: p.State}
 	if dev.hasField(FIELD_INUSE) {
 		p.State.InUse = dev.GetDataAsBool(FIELD_INUSE)

@@ -13,16 +13,18 @@ var (
 )
 
 type DeviceDiscoveryMessage struct {
-	ID string
+	ID    string
 	State interface{}
 }
 
 type AqaraManager struct {
 	GateWay           *GateWay
 	Motions           map[string]*Motion
+	MotionAq2s        map[string]*MotionAq2
 	Switchs           map[string]*Switch
 	DualWiredSwitches map[string]*DualWiredWallSwitch
 	SensorHTs         map[string]*SensorHT
+	WeatherV1s        map[string]*WeatherV1
 	Magnets           map[string]*Magnet
 	Plugs             map[string]*Plug
 	ReportAllMessages bool
@@ -38,9 +40,11 @@ func NewAqaraManager() (m *AqaraManager) {
 	//AqaraManager
 	m = &AqaraManager{
 		Motions:           make(map[string]*Motion),
+		MotionAq2s:        make(map[string]*MotionAq2),
 		Switchs:           make(map[string]*Switch),
 		DualWiredSwitches: make(map[string]*DualWiredWallSwitch),
 		SensorHTs:         make(map[string]*SensorHT),
+		WeatherV1s:        make(map[string]*WeatherV1),
 		Magnets:           make(map[string]*Magnet),
 		Plugs:             make(map[string]*Plug),
 		StateMessages:     make(chan interface{}, 1024),
@@ -122,8 +126,21 @@ func (m *AqaraManager) putDevice(dev *Device) (added bool) {
 			dev.GatewayConnection = gateway.GatewayConnection
 			m.Motions[dev.Sid] = NewMotion(dev)
 			discovery = &DeviceDiscoveryMessage{
-				ID:dev.Sid,
-				State:m.Motions[dev.Sid].State,
+				ID:    dev.Sid,
+				State: m.Motions[dev.Sid].State,
+			}
+		}
+	case MODEL_MOTIONAQ2:
+		d, found := m.MotionAq2s[dev.Sid]
+		if found {
+			d.Set(dev)
+		} else {
+			dev.Aqara = m
+			dev.GatewayConnection = gateway.GatewayConnection
+			m.MotionAq2s[dev.Sid] = NewMotionAq2(dev)
+			discovery = &DeviceDiscoveryMessage{
+				ID:    dev.Sid,
+				State: m.MotionAq2s[dev.Sid].State,
 			}
 		}
 	case MODEL_SWITCH:
@@ -135,8 +152,8 @@ func (m *AqaraManager) putDevice(dev *Device) (added bool) {
 			dev.GatewayConnection = gateway.GatewayConnection
 			m.Switchs[dev.Sid] = NewSwitch(dev)
 			discovery = &DeviceDiscoveryMessage{
-				ID:dev.Sid,
-				State:m.Switchs[dev.Sid].State,
+				ID:    dev.Sid,
+				State: m.Switchs[dev.Sid].State,
 			}
 		}
 	case MODEL_DUALWIREDSWITCH:
@@ -148,8 +165,8 @@ func (m *AqaraManager) putDevice(dev *Device) (added bool) {
 			dev.GatewayConnection = gateway.GatewayConnection
 			m.DualWiredSwitches[dev.Sid] = NewDualWiredSwitch(dev)
 			discovery = &DeviceDiscoveryMessage{
-				ID:dev.Sid,
-				State:m.DualWiredSwitches[dev.Sid].State,
+				ID:    dev.Sid,
+				State: m.DualWiredSwitches[dev.Sid].State,
 			}
 		}
 	case MODEL_SENSORHT:
@@ -161,8 +178,21 @@ func (m *AqaraManager) putDevice(dev *Device) (added bool) {
 			dev.GatewayConnection = gateway.GatewayConnection
 			m.SensorHTs[dev.Sid] = NewSensorHt(dev)
 			discovery = &DeviceDiscoveryMessage{
-				ID:dev.Sid,
-				State:m.SensorHTs[dev.Sid].State,
+				ID:    dev.Sid,
+				State: m.SensorHTs[dev.Sid].State,
+			}
+		}
+	case MODEL_WEATHERV1:
+		d, found := m.WeatherV1s[dev.Sid]
+		if found {
+			d.Set(dev)
+		} else {
+			dev.Aqara = m
+			dev.GatewayConnection = gateway.GatewayConnection
+			m.WeatherV1s[dev.Sid] = NewWeatherV1(dev)
+			discovery = &DeviceDiscoveryMessage{
+				ID:    dev.Sid,
+				State: m.WeatherV1s[dev.Sid].State,
 			}
 		}
 	case MODEL_MAGNET:
@@ -174,8 +204,8 @@ func (m *AqaraManager) putDevice(dev *Device) (added bool) {
 			dev.GatewayConnection = gateway.GatewayConnection
 			m.Magnets[dev.Sid] = NewMagnet(dev)
 			discovery = &DeviceDiscoveryMessage{
-				ID:dev.Sid,
-				State:m.Magnets[dev.Sid].State,
+				ID:    dev.Sid,
+				State: m.Magnets[dev.Sid].State,
 			}
 		}
 	case MODEL_PLUG:
@@ -187,8 +217,8 @@ func (m *AqaraManager) putDevice(dev *Device) (added bool) {
 			dev.GatewayConnection = gateway.GatewayConnection
 			m.Plugs[dev.Sid] = NewPlug(dev)
 			discovery = &DeviceDiscoveryMessage{
-				ID:dev.Sid,
-				State:m.Plugs[dev.Sid].State,
+				ID:    dev.Sid,
+				State: m.Plugs[dev.Sid].State,
 			}
 		}
 	default:

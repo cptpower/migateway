@@ -68,6 +68,8 @@ func NewSwitch(dev *Device) *Switch {
 }
 
 func (s *Switch) Set(dev *Device) {
+	dev.SetLastUpdate()
+
 	change := &SwitchStateChange{ID: s.Sid, From: s.State, To: s.State}
 
 	s.State.Battery = dev.GetBatteryLevel(s.State.Battery)

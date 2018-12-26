@@ -41,6 +41,8 @@ func convertToBatteryPercentage(battery uint32) float32 {
 }
 
 func (m *Magnet) Set(dev *Device) {
+	dev.SetLastUpdate()
+
 	change := &MagnetStateChange{ID: m.Sid, From: m.State, To: m.State}
 	if dev.hasField(FIELD_STATUS) {
 		status := dev.GetData(FIELD_STATUS)
